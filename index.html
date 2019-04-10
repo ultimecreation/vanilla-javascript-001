@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vanilla-javascript-001</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar-nav navbar-dark bg-dark py-5">
+        <div class="d-flex ">
+            <a href="#" class="navbar-brand ml-3">TodoListe</a>
+            <button class="btn btn-primary ml-auto mr-5" id="clearAllBtn">Supprimer tout</button>
+        </div>
+    </nav>
+
+    <div class="container ">
+        <div class="row ">
+            <div class="col-md-8 mx-auto">
+                <form id="todoForm" class="my-5">
+                    <div class="form-group">
+                        <label >Nom</label>
+                        <input type="text" id="nameInput" class="form-control" placeholder="Entrer un nom">
+                        
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="descriptionInput" class="form-control" placeholder="Entrer une description"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="dueDate" class="form-control">
+                    </div>
+
+                    <input type="submit" value="Soumettre" class="btn btn-info btn-block" id="submitBtn">
+                    <div class="d-flex justify-content-around mt-2">
+                        <input type="submit" value="Mettre à jour" class="btn btn-info" id="updateBtn">
+                        <input type="submit" value="Abandonner" class="btn btn-warning" id="cancelUpdateBtn">
+                        <input type="submit" value="Supprimer" class="btn btn-danger" id="removeBtn">
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-8 text-center mx-auto">
+                <div id="messageContainer">
+
+                </div>
+            </div>
+            <div class="col-md-8 mx-auto">
+                <div id="todosContainer">
+                    <h1 class="text-center">Mes Todos</h1>
+                        <!-- <div class="card shadow p-2">
+                            <div class="card-title d-flex">
+                                <h3>${todo.name}</h3>
+                                <span class="ml-auto">${todo.dueDate}</span>
+                            </div>
+                            <div class="card-body">
+                                <p>${todo-desciption}</p>
+                            </div>
+                            <div class="card-footer">
+                                <button id="editBtn" class="btn btn-primary btn-block">Modifier</button>
+                                <input type="hidden" id="todoIndex" value="">
+                            </div>
+                        </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html>
