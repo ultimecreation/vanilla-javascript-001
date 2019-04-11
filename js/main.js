@@ -11,11 +11,11 @@ let messages = new Set();
 let todos;
 
 /////////
-// INPUTS
-const nameInput = document.querySelector('#nameInput');
-const descriptionInput = document.querySelector('#descriptionInput');
-const dueDateInput = document.querySelector('#dueDate')
-
+// INPUTS AND INDEXTOUPDATE VALUE
+let nameInput = document.querySelector('#nameInput');
+let descriptionInput = document.querySelector('#descriptionInput');
+let dueDateInput = document.querySelector('#dueDate')
+let todoIndexToUpdate = document.querySelector('#todoIndexToUpdate');
 
 
 /////////////////
@@ -23,9 +23,11 @@ const dueDateInput = document.querySelector('#dueDate')
 // load todos
 document.addEventListener('DOMContentLoaded',displayTodos)
 // submit event listener
-submitBtn.addEventListener('click',createTodo);
+submitBtn.addEventListener('click',submitTodo);
+// edit event listener
+todosContainer.addEventListener('click',editTodo)
 // update event listener
-updateBtn.addEventListener('click',updateTodo);
+updateBtn.addEventListener('click',submitTodo);
 // cancel update event listener
 cancelUpdateBtn.addEventListener('click',cancelUpdate)
 // remove event listener
@@ -37,11 +39,33 @@ clearAllBtn.addEventListener('click',clearAllTodos);
 //get todos from localStorage
 function dbGetTodos(){
     todos = localStorage.getItem('todos') ? JSON.parse(localStorage.getItem('todos')) : []
+    if(todos.length>1){
+        todos.sort(function (a, b) {
+            return new Date(a.dueDate) - new Date(b.dueDate) ;
+        });
+    }
     return todos
 }
 // save or update todos
-function dbSaveTodo(todo,index = null){
-    console.log(index)
+function dbSaveTodo(todo,id = null){
+    todos = dbGetTodos()
+    if(id === null ){
+        todos.push(todo)
+        localStorage.setItem('todos',JSON.stringify(todos))
+        messages.add(['success',"todo enregistrée avec succès"])
+        showAlert(messages)
+    }
+    if(id !== null){
+        todos[id].name = todo.name
+        todos[id].description = todo.description
+        todos[id].dueDate = todo.dueDate
+        todos[id].dueDateToDisplay = todo.dueDateToDisplay
+        localStorage.setItem('todos',JSON.stringify(todos))
+        messages.add(['success',"todo modifiée avec succès"])
+        showAlert(messages)
+    }
+    
+    
 }
 // delete to from localStorage
 function dbRemoveTodo(idToRemove){
@@ -53,11 +77,31 @@ function dbRemoveTodo(idToRemove){
 // display todos
 function displayTodos(){
     changeCurrentState('startMode')
-    
-    console.log()
+    todos = dbGetTodos()
+    let output = '';
+    todos.forEach((todo,index) => {
+        if(new Date(todo.dueDate).toLocaleDateString() >= new Date().toLocaleDateString()){
+        output += `
+                <div class="card shadow p-2 my-4">
+                    <div class="card-title d-flex">
+                        <h3>${todo.name}</h3>
+                        <span class="ml-auto "><strong>${todo.dueDateToDisplay}</strong></span>
+                    </div>
+                    <div class="card-body text-center">
+                        <p>${todo.description}</p>
+                    </div>
+                    <div class="card-footer">
+                        <button id="editBtn" value="${index}" class="btn btn-primary btn-block" >Modifier</button>
+                        <input type="hidden" id="hiddenDueDate" value="${todo.dueDate}">
+                    </div>
+                </div>
+            `;
+        } 
+    })
+    todosContainer.innerHTML = output;
 }
 // create todo
-function createTodo(e){
+function submitTodo(e){
     e.preventDefault();
     // validate inputs
     if(nameInput.value === ''){
@@ -74,10 +118,34 @@ function createTodo(e){
         return false
     }
     if(messages.size === 0) {
-        console.log('submitted')
+        let dueDate = new Date(dueDateInput.value).toLocaleDateString("fr",{weekday: "long", year: "numeric", month: "long", day: "numeric"})
+        let id = todoIndexToUpdate.value
+        const todo = {
+            "name": nameInput.value,
+            "description": descriptionInput.value,
+            "dueDate": dueDateInput.value,
+            "dueDateToDisplay": dueDate
+            
+        }
+        if(!id) dbSaveTodo(todo)
+        else dbSaveTodo(todo,id)
+        clearInputs()
+        displayTodos()
+        
     }  
 }
-
+// edit todo
+function editTodo(e){
+    e.preventDefault();
+    if(e.target.id === 'editBtn'){
+        nameInput.value = e.target.parentElement.previousElementSibling.previousElementSibling.children[0].textContent
+        descriptionInput.value = e.target.parentElement.previousElementSibling.children[0].textContent
+        dueDateInput.value = e.target.nextElementSibling.value
+        todoIndexToUpdate.value  = e.target.value
+        changeCurrentState('editMode')
+        window.scrollTo({top: 0, behavior: 'smooth'})
+    }  
+}
 // update todo
 function updateTodo(e){
     e.preventDefault();
@@ -108,9 +176,7 @@ function showAlert(messages){
     })
     messageContainer.innerHTML= output;
     messages.clear();
-    setTimeout(() => {
-        messageContainer.innerHTML = ''
-    },3000);
+    setTimeout(() => messageContainer.innerHTML = '',3000);
 }
 function clearInputs(){
     nameInput.value = '';
@@ -120,9 +186,13 @@ function clearInputs(){
 function changeCurrentState(state){
     if(state === 'editMode'){
         submitBtn.style.display = 'none' 
+        updateBtn.style.display = 'block';
+        cancelUpdateBtn.style.display = 'block';
+        removeBtn.style.display = 'block'
     } 
     else if(state === 'startMode'){
-        clearInputs()
+        
+        submitBtn.style.display = 'block' 
         updateBtn.style.display = 'none';
         cancelUpdateBtn.style.display = 'none';
         removeBtn.style.display = 'none'
