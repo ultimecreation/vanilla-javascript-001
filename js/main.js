@@ -39,39 +39,37 @@ clearAllBtn.addEventListener('click',clearAllTodos);
 //get todos from localStorage
 function dbGetTodos(){
     todos = localStorage.getItem('todos') ? JSON.parse(localStorage.getItem('todos')) : []
-    if(todos.length>1){
-        todos.sort(function (a, b) {
-            return new Date(a.dueDate) - new Date(b.dueDate) ;
-        });
-    }
+    todos.sort(function (a, b) {
+        return new Date(a.dueDate) - new Date(b.dueDate) ;
+    });
     return todos
 }
 // save or update todos
-function dbSaveTodo(todo,id = null){
+function dbSaveTodo(todo){
     todos = dbGetTodos()
-    if(id === null ){
-        todos.push(todo)
-        localStorage.setItem('todos',JSON.stringify(todos))
-        messages.add(['success',"todo enregistrée avec succès"])
-        showAlert(messages)
-    }
-    if(id !== null){
-        todos[id].name = todo.name
-        todos[id].description = todo.description
-        todos[id].dueDate = todo.dueDate
-        todos[id].dueDateToDisplay = todo.dueDateToDisplay
-        localStorage.setItem('todos',JSON.stringify(todos))
-        messages.add(['success',"todo modifiée avec succès"])
-        showAlert(messages)
-    }
-    
-    
+    todos.push(todo)
+    localStorage.setItem('todos',JSON.stringify(todos))  
+}
+// save or update todos
+function dbUpdateTodo(todo,id){
+    todos = dbGetTodos()
+    console.log(todos[id])
+    todos[id].name = todo.name
+    todos[id].description = todo.description
+    todos[id].dueDate = todo.dueDate
+    todos[id].dueDateToDisplay = todo.dueDateToDisplay
+    localStorage.setItem('todos',JSON.stringify(todos))        
 }
 // delete to from localStorage
 function dbRemoveTodo(idToRemove){
-
+    todos = dbGetTodos()
+    todos.splice(idToRemove,1)
+    localStorage.setItem('todos',JSON.stringify(todos))
 }
-
+//delete all todos
+function dbClearAllTodos(){
+    localStorage.removeItem('todos')
+}
 
 // UI FUNCTIONS
 // display todos
@@ -103,6 +101,7 @@ function displayTodos(){
 // create todo
 function submitTodo(e){
     e.preventDefault();
+    messages.clear()
     // validate inputs
     if(nameInput.value === ''){
         messages.add(['danger',"le nom est requis"]);
@@ -112,6 +111,9 @@ function submitTodo(e){
     }
     if(dueDateInput.value === ''){
         messages.add(['danger',"la date est requise"])
+    }
+    if(new Date(dueDateInput.value).toLocaleDateString() < new Date().toLocaleDateString()){
+        messages.add(['danger',"la date est antérieur à celle d'aujourd'hui"])
     }
     if(messages.size > 0){
         showAlert(messages)
@@ -124,14 +126,21 @@ function submitTodo(e){
             "name": nameInput.value,
             "description": descriptionInput.value,
             "dueDate": dueDateInput.value,
-            "dueDateToDisplay": dueDate
-            
+            "dueDateToDisplay": dueDate   
         }
-        if(!id) dbSaveTodo(todo)
-        else dbSaveTodo(todo,id)
-        clearInputs()
-        displayTodos()
         
+        messages.clear()
+        if(e.target.id === 'submitBtn'){
+            dbSaveTodo(todo)
+            messages.add(['success',"todo enregistrée avec succès"]) 
+        }
+        if(e.target.id === 'updateBtn'){
+            dbUpdateTodo(todo,id)
+            messages.add(['success',"todo modifiée avec succès"])
+        }
+        showAlert(messages)
+        clearInputs()
+        displayTodos()       
     }  
 }
 // edit todo
@@ -146,26 +155,38 @@ function editTodo(e){
         window.scrollTo({top: 0, behavior: 'smooth'})
     }  
 }
-// update todo
-function updateTodo(e){
-    e.preventDefault();
-    console.log('update')
-}
-
 // cancel update
 function cancelUpdate(e){
     e.preventDefault();
-    console.log('cancel update')
+    messages.clear()
+    changeCurrentState('startMode')
+    messages.add(['success',"modification abandonéé"])
+    showAlert(messages)
+    clearInputs()
 }
 
 function removeTodo(e){
     e.preventDefault();
-    console.log('remove')
+    if(e.target.id === 'removeBtn'){
+        const idToRemove = e.target.parentElement.previousElementSibling.previousElementSibling.value
+        dbRemoveTodo(idToRemove)
+        messages.clear()
+        changeCurrentState('startMode')
+        messages.add(['success',"todo supprimée avec succès"])
+        showAlert(messages)
+        clearInputs()
+        displayTodos() 
+    }
+    
 }
 
 function clearAllTodos(e){
     e.preventDefault();
-    console.log('clear all')
+    dbClearAllTodos()
+    messages.clear()
+    messages.add(['success',"todos supprimées avec succès"])
+    showAlert(messages)
+    displayTodos() 
 }
 function showAlert(messages){
     let output = '';
@@ -175,8 +196,10 @@ function showAlert(messages){
         `;
     })
     messageContainer.innerHTML= output;
-    messages.clear();
-    setTimeout(() => messageContainer.innerHTML = '',3000);
+    setTimeout(() => {
+        messageContainer.innerHTML = ''
+    },2000);
+    
 }
 function clearInputs(){
     nameInput.value = '';
@@ -191,7 +214,6 @@ function changeCurrentState(state){
         removeBtn.style.display = 'block'
     } 
     else if(state === 'startMode'){
-        
         submitBtn.style.display = 'block' 
         updateBtn.style.display = 'none';
         cancelUpdateBtn.style.display = 'none';
